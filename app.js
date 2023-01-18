@@ -94,7 +94,29 @@ function checkAccount(accountName) {
 
 // CHECK BALANCE OF THE ACCOUNT
 function checkBalance() {
+    inquirer.prompt([
+        {
+            name: "accountName",
+            message:"Write your account's name"
+        }
+    ]).then((answer) => {
 
+        const accountName = answer["accountName"]
+
+        // Verify if account exists
+        if(!checkAccount(accountName)) {
+            return checkBalance()
+        }
+
+        const accountData = getAccountByName(accountName)
+
+        console.log(
+            chalk.bgBlue.black(
+                `Your account's balance is $${accountData.balance}`
+            )
+        )
+
+    }).catch(err => console.log(err))
 }
 
 // MAKE A DEPOSIT
