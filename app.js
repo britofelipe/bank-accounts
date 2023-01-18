@@ -36,7 +36,7 @@ function operation() {
             else if(action === "Deposit")
                 deposit();
             else if(action === "Withdraw")
-                checkBalance();
+                withdraw();
             else if(action === "Exit")
                 exit();
         })
@@ -97,7 +97,7 @@ function checkBalance() {
     inquirer.prompt([
         {
             name: "accountName",
-            message:"Write your account's name"
+            message: "What is your account's name?"
         }
     ]).then((answer) => {
 
@@ -115,7 +115,7 @@ function checkBalance() {
                 `Your account's balance is $${accountData.balance}`
             )
         )
-
+        operation()
     }).catch(err => console.log(err))
 }
 
@@ -129,9 +129,10 @@ function deposit() {
     ])
     .then((answer)=> {
         accountName = answer["accountName"]
-        // verify if account exists
+
+        // Verify if account exists
         if(!checkAccount(accountName)) {
-            return deposit()
+            return checkBalance()
         }
         inquirer.prompt([
             {
@@ -141,7 +142,7 @@ function deposit() {
         ]).then((answer) => {
             const amount = answer["amount"]
 
-            // add an amount
+            // Add an amount
             addAmount(accountName, amount)
             operation()
         })
@@ -166,9 +167,61 @@ function addAmount(accountName, amount) {
             console.log(err)
         },
     )
-    console.log(chalk.green(`The amount of ${amount} has been successfully deposited`))
+    console.log(chalk.green(`The amount of $${amount} has been successfully deposited`))
 }
 
+// WITHDRAW MONEY FROM ACCOUNT
+function withdraw() {
+    inquirer.prompt([
+        {
+            name: "accountName",
+            message: "What is your account's name?"
+        }
+    ])
+    .then((answer) => {
+        accountName = answer["accountName"]
+
+        // Verify if account exists
+        if(!checkAccount(accountName)) {
+            return checkBalance()
+        }
+        inquirer.prompt([
+            {
+                name: "amount",
+                message: "How much do you want to withdraw?"
+            }
+        ]).then((answer) => {
+            const amount = answer["amount"]
+
+            // Subctract an amount
+            subtractAmount(accountName, amount)
+            operation()
+        })
+        .catch(err => console.log(err))
+
+    }).catch(err => console.log(err))
+}
+
+function subtractAmount(accountName, amount) {
+    const accountData = getAccountByName(accountName)
+    if(!amount) {
+        console.log(
+            chalk.bgRed.black("Please provide a valid amount")
+        )
+        return withdraw()
+    }
+    accountData.balance = parseFloat(accountData.balance) - parseFloat(amount) 
+    fs.writeFileSync(
+        `accounts/${accountName}.json`,
+        JSON.stringify(accountData),
+        function (err) {
+            console.log(err)
+        },
+    )
+    console.log(chalk.green(`The amount of $${amount} has been successfully withdrawn`))
+}
+
+// GET
 function getAccountByName(accountName) {
     const accountJSON = fs.readFileSync(`accounts/${accountName}.json`, {
         encoding: "utf8",
